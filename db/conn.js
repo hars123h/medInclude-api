@@ -7,7 +7,7 @@ const env = require("dotenv");
 env.config();
 mongoose.set("strictQuery", false);
 mongoose.connect(
-    'mongodb://localhost:27017/medincludes',{
+    process.env.MONGO_URL,{
       
     }
 ).then(() => {
