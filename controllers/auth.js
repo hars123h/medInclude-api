@@ -1,8 +1,10 @@
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
-const { log } = require('console');
-const JWT_AUTH_TOKEN = process.env.JWT_AUTH_TOKEN;
 
+const crypto = require('crypto');
+const sgMail = require('@sendgrid/mail'); // SENDGRID_API_KEY
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const smsKey = process.env.SMS_SECRET_KEY;
 
 
 
@@ -63,6 +65,59 @@ exports.login = (req, res) => {
     });
 }
 
+exports.sendOtp = (req, res) => {
+    const { uniqueId } = req.body;
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    console.log(otp);
+
+    const ttl = 2 * 60 * 1000;
+    const expires = Date.now() + ttl;
+    const data = `${uniqueId}.${otp}.${expires}`;
+    const hash = crypto.createHmac('sha256', smsKey).update(data).digest('hex');
+    const fullHash = `${hash}.${expires}`;
+
+    User.findOne({ uniqueId: uniqueId }, (err, user) => {
+        if (user) {
+            return res.status(400).json({
+                error: 'Email is taken'
+            });
+        }
+        const emailData = {
+            from: process.env.EMAIL_FROM,
+            to: uniqueId,
+            subject: `Account activation link`,
+            html: `
+            Your OTP is ${otp}
+        `
+        };
+
+        sgMail.send(emailData).then(sent => {
+            return res.json({uniqueId, hash: fullHash, otp});
+        });
+        
+    });
+};
+
+exports.verifyOtp = (req, res) => {
+    const uniqueId = req.body.uniqueId;
+	const hash = req.body.hash;
+	const otp = req.body.otp;
+	let [ hashValue, expires ] = hash.split('.');
+
+	let now = Date.now();
+	if (now > parseInt(expires)) {
+		return res.status(504).send({ msg: 'Timeout. Please try again' });
+	}
+	let data = `${uniqueId}.${otp}.${expires}`;
+	let newCalculatedHash = crypto.createHmac('sha256', smsKey).update(data).digest('hex');
+	if (newCalculatedHash === hashValue) {
+		console.log('user confirmed');
+		res.send({ msg: 'Email verified' });
+	} else {
+		console.log('not authenticated');
+		return res.status(400).send({ verification: false, msg: 'Incorrect OTP' });
+	}
+}
 
 
 exports.requireSignin = async function (req, res, next) {
