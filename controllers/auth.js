@@ -9,6 +9,9 @@ const smsKey = process.env.SMS_SECRET_KEY;
 
 
 
+
+
+
 exports.register = (req, res) => {
     const { firstName, lastName, uniqueId, password } = req.body;
    
@@ -55,7 +58,7 @@ exports.login = (req, res) => {
             });
         }
         // generate a token and send to client
-        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        const token = jwt.sign({ _id: user._id }, 'pijisadkjfkldsazjvklzsdndvklnzxclkvnxdlkzcvnkldzfxnvsddljnjkawdshnsd', { expiresIn: '7d' });
         const { _id, firstName, lastName, uniqueId, role } = user;
 
         return res.json({
@@ -121,15 +124,19 @@ exports.verifyOtp = (req, res) => {
 
 
 exports.requireSignin = async function (req, res, next) {
+    
     if(req.headers.authorization) {
         const token = req.headers.authorization.split(" ")[1];
-    
-        const user = jwt.verify(token, process.env.JWT_SECRET);
+        const user = jwt.verify(token, 'pijisadkjfkldsazjvklzsdndvklnzxclkvnxdlkzcvnkldzfxnvsddljnjkawdshnsd');
+        req.user = user;
         
-        req.user = user
     }
     else {
         return res.status(400).json({message: 'Authorization Required'})
     }
     next();
 };
+
+
+
+
