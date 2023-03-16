@@ -91,6 +91,9 @@ exports.sendOtp = (req, res) => {
             to: uniqueId,
             subject: `Account activation link`,
             html: `
+            Hello ..... <br />
+           Thank you for signing up on MedInclude.<br />
+           Here's your OTP: .......<br/>
             Your OTP is ${otp}
         `
         };
@@ -157,7 +160,7 @@ exports.forgotPassword = (req, res) => {
             subject: `Password Reset link`,
             html: `
                 <h1>Please use the following link to reset your password</h1>
-                <p>http://localhost:3000/auth/password/reset/${token}</p>
+                <p>https://med-delta.vercel.app/auth/password/reset/${token}</p>
                 <hr />
                 <p>This email may contain sensetive information</p>
                 
