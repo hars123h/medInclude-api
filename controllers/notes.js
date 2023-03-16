@@ -1,4 +1,5 @@
 const Note = require("../models/notes");
+const sgMail = require('@sendgrid/mail'); // SENDGRID_API_KEY
 
 
 exports.notes = (req, res) => {
@@ -20,16 +21,7 @@ exports.notes = (req, res) => {
   });
 }
 
-// exports.allNote = (req,res) => {
-//     Note.find({})
-//     .exec((error, note) => {
-//         if(error) return res.status(400).json({error});
-//         if(note) {
-//             const noteList = createCategories(categories);
-//             res.status(200).json({categoryList})  
-//         }
-//     });
-// }
+
 
 exports.allNote = async (req, res) => {
   try {
@@ -47,9 +39,30 @@ exports.allNote = async (req, res) => {
   }
 };
 
-exports.signleNote = async(req, res) => {
+exports.signleNote = async (req, res) => {
   let note = await Note.findById(req.params.noteId)
-  
-  .exec()
+    .exec()
   res.json(note)
+}
+
+exports.createMessage = (req, res) => {
+  const { firstName, lastName, email, message } = req.body;
+  if(!email) {
+    return res.status(400).json({
+      message:"Email is Required"
+    })
+  }
+  const emailData = {
+    from: process.env.EMAIL_FROM,
+    to: email,
+    subject: `Contact Message`,
+    html: `
+     ${message}
+`
+};
+
+sgMail.send(emailData).then(sent => {
+    return res.json("Message is sent Successfully");
+});
+
 }
