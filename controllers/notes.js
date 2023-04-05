@@ -54,9 +54,10 @@ exports.createMessage = (req, res) => {
   }
   const emailData = {
     from: process.env.EMAIL_FROM,
-    to: email,
+    to: process.env.EMAIL_FROM,
     subject: `Contact Message`,
     html: `
+    ${email}
      ${message}
 `
 };
